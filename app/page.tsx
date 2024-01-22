@@ -1,11 +1,12 @@
 'use client'
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-import LoginForm from "@/components/LoginForm";
 import { getToken } from "@/services/spotify";
 
-export default function Home() {
+import { Suspense } from "react";
+import LoginForm from "@/components/LoginForm";
+
+const Auth = () => {
 	const [loading, setLoading] = useState(true);
 	const [token, setToken] = useState<string | undefined>(undefined);
 	const router = useRouter();
@@ -27,4 +28,10 @@ export default function Home() {
 	return (<>
 		{loading || token !== undefined ? "" : <LoginForm />}
 	</>);
+}
+
+export default function Home() {
+	return (<Suspense>
+		<Auth />
+	</Suspense>);
 }
