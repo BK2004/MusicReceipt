@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${font.className} w-full h-screen m-0 px-56 py-20 bg-inherit bg-slate-800 flex justify-start items-center flex-col gap-5`}>{children}</body>
+      <body className={`${font.className} w-full h-screen m-0 py-20 bg-inherit bg-slate-800 flex justify-start items-center flex-col gap-5`}>{children}</body>
     </html>
   );
 }

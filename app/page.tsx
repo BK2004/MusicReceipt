@@ -5,6 +5,7 @@ import { getToken } from "@/services/spotify";
 
 import { Suspense } from "react";
 import LoginForm from "@/components/LoginForm";
+import GenerateRedirect from "@/components/GenerateRedirect";
 
 const Auth = () => {
 	const [loading, setLoading] = useState(true);
@@ -26,7 +27,7 @@ const Auth = () => {
 	}, []);
 
 	return (<>
-		{loading || token !== undefined ? "" : <LoginForm />}
+		{loading || token !== undefined ? <GenerateRedirect /> : <LoginForm />}
 	</>);
 }
 
