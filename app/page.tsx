@@ -27,7 +27,7 @@ const Auth = () => {
 	}, []);
 
 	return (<>
-		{loading || token !== undefined ? <GenerateRedirect /> : <LoginForm />}
+		{!loading ? token !== undefined ? <GenerateRedirect /> : <LoginForm /> : ""}
 	</>);
 }
 

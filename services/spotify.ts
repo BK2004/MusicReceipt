@@ -8,6 +8,29 @@ const SCOPES = [
 const AUTH_URL = 'https://accounts.spotify.com/authorize';
 const TOKEN_URL = 'https://accounts.spotify.com/api/token';
 
+export type Album = {
+	images: {height: number, url: string, width: number}[]
+}
+
+export type Artist = {
+	external_urls: {spotify: string},
+	href: string,
+	name: string,
+	id: string,
+}
+
+export type Song = {
+	"external_urls": {"spotify": string},
+	artists: Artist[],
+	href: string,
+	name: string,
+	preview_url: string,
+	duration_ms: number,
+	id: string,
+	uri: string,
+	album: Album,
+}
+
 export const generateString = (length: number) => {
 	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 	const values = new Uint8Array(length);
