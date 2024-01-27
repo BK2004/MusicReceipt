@@ -37,15 +37,6 @@ export const generateReceipt = async (songList: Song[], displayName: string) => 
 			random = random + CHOICES[Math.floor(Math.random() * CHOICES.length)];
 		} 
 	} while ((await db.select().from(receipts).where(eq( receipts.id, random ))).length > 0);
-	await db.insert(receipts).values({ id: random, display_name: displayName });
-
-	// Insert all songs into songs table
-	await db.insert(songs).values(songList.map(s => ({
-		id: s.id,
-		name: s.name,
-		url: s.url,
-		image: s.image
-	}))).onConflictDoNothing({ target: [ songs.id ]});
 
 	// Generate songs to artist, songs to receipt pairs, and artist entries
 	const artistSongPairs: { artist_id: string, song_id: string }[] = [];
@@ -60,10 +51,68 @@ export const generateReceipt = async (songList: Song[], displayName: string) => 
 		songReceiptPairs.push({ song_id: s.id, receipt_id: random });
 	});
 
+	await db.insert(receipts).values({ id: random, display_name: displayName });
+
+	// Insert all songs into songs table
+	await db.insert(songs).values(songList.map(s => ({
+		id: s.id,
+		name: s.name,
+		url: s.url,
+		image: s.image,
+	}))).onConflictDoNothing({ target: [ songs.id ]});
+
 	// Insert all relations into table
 	await db.insert(artists).values(artistsToInsert).onConflictDoNothing({ target: [ artists.id ]});
 	await db.insert(songsToArtists).values(artistSongPairs).onConflictDoNothing();
 	await db.insert(receiptsToSongs).values(songReceiptPairs).onConflictDoNothing();
 
 	return random;
+}
+
+export const getReceipt = async (receiptId: string) => {
+	const res = (await db.query.receipts.findFirst({
+		where: eq(receipts.id, receiptId),
+		with: {
+			receiptsToSongs: {
+				columns: {},
+				with: {
+					songs: {
+						with: {
+							songsToArtists: {
+								columns: {},
+								with: {
+									artists: true
+								}
+							}
+						}
+					},
+				}
+			}
+		}
+	}));
+
+	if (!res) {
+		throw "Receipt does not exist";
+	}
+
+	const out: { display_name: string, songs: Song[]} = {
+		display_name: res.display_name!,
+		songs: [],
+	}
+	
+	// Flatten each song entry and insert into output
+	res.receiptsToSongs.forEach(s => {
+		const artists = s.songs.songsToArtists.map(a => ({id: a.artists.id, name: a.artists.name!, url: a.artists.url!}));
+		const { id, name, url, image } = s.songs;
+
+		out.songs.push({
+			id,
+			name: name!,
+			url: url!,
+			image: image!,
+			artists
+		});
+	});
+
+	return out;
 }

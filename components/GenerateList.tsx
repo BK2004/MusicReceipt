@@ -51,7 +51,6 @@ export default function GenerateList() {
 				getTopSongs(token).then((res) => {
 					res.json().then((data) => {
 						const songList: Song[] = beautifySongs(data.items);
-						console.log(songList);
 						setSongs(songList);
 
 						// Songs loaded successfully, get display name

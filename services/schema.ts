@@ -1,8 +1,7 @@
 import {
-	integer,
 	pgTable,
+	pgSchema,
 	primaryKey,
-	serial,
 	text,
 	varchar,
 } from "drizzle-orm/pg-core"
@@ -90,4 +89,4 @@ export const songsToArtistsRelations = relations(songsToArtists, ({ one }) => ({
 		fields: [songsToArtists.artist_id],
 		references: [artists.id]
 	})
-}))
+}));

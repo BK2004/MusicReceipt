@@ -1,3 +1,5 @@
+'use client'
+
 import { type Song } from "@/services/spotify";
 import { useState } from "react";
 
@@ -16,7 +18,7 @@ export default function SongList({ songs, displayName, generating, generatedUrl,
 	
 	return (<div className={"w-full max-w-4xl flex flex-col justify-start gap-4"}>
 		<div className="text-green-500 text-4xl font-bold top-bar w-full flex justify-between">
-			<h1 className="">{displayName}'s Music Receipt</h1>
+			<h1 className="">{displayName}&apos;s Music Receipt</h1>
 			{ generateUrl ? <div className="relative">
 				<Image onClick={onClick} src={Share} width={40} height={40} className="text-green-500 fill-green-500 hover:cursor-pointer" alt="share button image" />
 				{modalVisible && (generating || generatedUrl !== undefined) ? <div className="generate-popup absolute w-fit p-3 right-0 bg-slate-900 text-lg rounded-md">
@@ -27,5 +29,6 @@ export default function SongList({ songs, displayName, generating, generatedUrl,
 		{songs!.map((song: Song) => {
 			return (<SongFrame key={song.id} song={song} />);
 		})}
+		{generateUrl ? "" : <a href="/generate" className="text-green-500 hover:underline">Generate your own Music Receipt!</a>}
 	</div>);
 }
