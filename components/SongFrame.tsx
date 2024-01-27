@@ -8,7 +8,7 @@ export default function SongFrame({ song }: { song: Song }) {
 			<a href={song.url} className="text-white font-bold text-ellipsis whitespace-nowrap max-w-[60vw] w-fit overflow-hidden block hover:underline">{song.name}</a>
 			<p className="text-white opacity-60 font-semibold overflow-hidden inline-block whitespace-nowrap text-ellipsis w-fit max-w-[_min(50vw,_400px)]">
 				{song.artists.map((artist, idx) => {
-					return (`${artist.name}${(idx != song.artists.length - 1) ? ", " : ""}`)
+					return (<span key={artist.id}><a className="hover:underline" href={artist.url}>{artist.name}</a>{idx != song.artists.length - 1 ? ", " : ""}</span>)
 				})}
 			</p>
 		</div>
