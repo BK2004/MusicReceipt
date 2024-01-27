@@ -8,27 +8,18 @@ const SCOPES = [
 const AUTH_URL = 'https://accounts.spotify.com/authorize';
 const TOKEN_URL = 'https://accounts.spotify.com/api/token';
 
-export type Album = {
-	images: {height: number, url: string, width: number}[]
-}
-
 export type Artist = {
-	external_urls: {spotify: string},
-	href: string,
+	url: string,
 	name: string,
 	id: string,
 }
 
 export type Song = {
-	"external_urls": {"spotify": string},
+	url: string,
 	artists: Artist[],
-	href: string,
 	name: string,
-	preview_url: string,
-	duration_ms: number,
+	image: string,
 	id: string,
-	uri: string,
-	album: Album,
 }
 
 export const generateString = (length: number) => {
@@ -107,4 +98,62 @@ export const getToken = async (code: string | null) => {
 	} catch(e) {} finally {
 		return null;
 	}
+}
+
+export const getDisplayName = async () => {
+	const name = Cookies.get("display_name");
+	const token = await getToken(null);
+	if (!token) {
+		// Clear name cookie if it's there; it shouldn't
+		if (name) {
+			Cookies.remove("display_name");
+		}
+
+		return null;
+	}
+
+	if (name) {
+		return name;
+	}
+
+	try {
+		const res = await fetch('https://api.spotify.com/v1/me', {
+			method: 'GET',
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
+		const body = await res.json();
+
+		if (body?.display_name) {
+			// Display name was returned, set it in cookies and return it
+			Cookies.set("display_name", body.display_name);
+			return body.display_name;
+		}
+	} catch (e) {}
+
+	return null;
+}
+
+export const beautifySongs = (songs: any[]) => {
+	const output: Song[] = []
+
+	songs.forEach((song) => {
+		let artists: Artist[] = song.artists.map((artist: { external_urls: { spotify: string; }; name: string; id: string; }) => ({
+			url: artist.external_urls.spotify as string,
+			name: artist.name as string,
+			id: artist.id as string,
+		}))
+
+		artists = artists.slice(0, Math.min(8, artists.length));
+		output.push({
+			image: song.album.images[0].url as string,
+			id: song.id as string,
+			name: song.name as string,
+			url: song.external_urls.spotify as string,
+			artists
+		})
+	});
+
+	return output;
 }

@@ -1,9 +1,10 @@
 'use client'
-import { getToken, type Song, type Artist } from "@/services/spotify";
+import { getToken, getDisplayName, type Song, beautifySongs } from "@/services/spotify";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import GenerateSkeleton from "./GenerateSkeleton";
-import Image from "next/image";
+import { request } from "@/services/request";
+
+import SongListSkeleton from "./SongListSkeleton";
 import SongList from "./SongList";
 
 const getTopSongs = (token: string) => {
@@ -19,6 +20,27 @@ export default function GenerateList() {
 	const router = useRouter();
 	const [loading, setLoading] = useState(true);
 	const [songs, setSongs] = useState<Song[] | undefined>(undefined);
+	const [generating, setGenerating] = useState<boolean>(false);
+	const [generatedUrl, setGeneratedUrl] = useState<string|undefined>(undefined);
+	const [displayName, setDisplayName] = useState<string | undefined>(undefined);
+
+	const generateUrl = () => {
+		if (generatedUrl !== undefined || displayName === undefined) return;
+		if (loading || songs?.length == 0) return;
+
+		setGenerating(true);
+		request.POST("/api/receipt", {
+			songs,
+			display_name: displayName
+		}).then((res) => {
+			res.json().then((data) => {
+				if (data.url) {
+					// Update generated url with given url
+					setGeneratedUrl(data.url);
+				}
+			}).catch((e) => {});
+		}).finally(() => setGenerating(false));
+	}
 
 	useEffect(() => {
 		getToken(null).then((token) => {
@@ -28,16 +50,24 @@ export default function GenerateList() {
 			} else {
 				getTopSongs(token).then((res) => {
 					res.json().then((data) => {
-						console.log(data.items);
-						const songList: Song[] = data.items;
+						const songList: Song[] = beautifySongs(data.items);
+						console.log(songList);
 						setSongs(songList);
-						setLoading(false);
+
+						// Songs loaded successfully, get display name
+						getDisplayName().then((res) => {
+							// Successfully loaded display name, update it and stop loading
+							setDisplayName(res);
+						}).catch((e) => {
+							// Failed to retrieve name, back to index
+							router.push("/");
+						}).finally(() => setLoading(false));
 					}).catch((e) => {
-						// API call failed, return to index page
+						// API returned bad data, return to index page
 						router.push("/");
 					});
 				}).catch((e) => {
-					// API failed, redirect to homepage
+					// API request failed, redirect to homepage
 					router.push("/");
 				})
 			}
@@ -45,6 +75,6 @@ export default function GenerateList() {
 	}, []);
 
 	return (<>
-		{loading ? <GenerateSkeleton /> : <SongList songs={songs!} />}
+		{loading ? <SongListSkeleton /> : <SongList songs={songs!} displayName={displayName!} generating={generating} generatedUrl={generatedUrl} generateUrl={generateUrl} />}
 	</>)
 }

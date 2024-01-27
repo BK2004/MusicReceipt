@@ -1,19 +1,31 @@
 import { type Song } from "@/services/spotify";
+import { useState } from "react";
 
+import SongFrame from "./SongFrame";
 import Image from "next/image";
+import Share from "@/public/share.svg";
 
-export default function SongList({ songs }: { songs: Song[] }) {
-	return (<div className={"w-full max-w-4xl flex flex-col justify-start gap-4"}>{songs!.map((song: Song) => {
-		return (<div key={song.id} className="w-full bg-slate-600 rounded-lg h-[6rem] px-6 items-center align-middle flex justify-start gap-5">
-			<Image src={song.album.images[1].url} width={80} height={80} alt={"Song image"} />
-			<div className="title-artist h-[3rem] flex flex-col justify-between flex-1">
-				<a href={song.external_urls.spotify} className="text-white font-bold text-ellipsis whitespace-nowrap w-[60vw] overflow-hidden block hover:underline">{song.name}</a>
-				<p className="text-white opacity-60 font-semibold overflow-hidden  inline-block whitespace-nowrap text-ellipsis w-[_min(50vw,_400px)]">
-					{song.artists.map((artist, idx) => {
-						return (`${artist.name}${(idx != song.artists.length - 1) ? ", " : ""}`)
-					})}
-				</p>
-			</div>
-		</div>)})}
+export default function SongList({ songs, displayName, generating, generatedUrl, generateUrl }: { songs: Song[], displayName: string, generating?: boolean, generatedUrl?: string | undefined, generateUrl?: () => void }) {
+	const [modalVisible, setModalVisible] = useState<boolean>(false);
+	
+	const onClick = () => {
+		if (!modalVisible)
+			generateUrl!();
+		setModalVisible(!modalVisible);
+	}
+	
+	return (<div className={"w-full max-w-4xl flex flex-col justify-start gap-4"}>
+		<div className="text-green-500 text-4xl font-bold top-bar w-full flex justify-between">
+			<h1 className="">{displayName}'s Music Receipt</h1>
+			{ generateUrl ? <div className="relative">
+				<Image onClick={onClick} src={Share} width={40} height={40} className="text-green-500 fill-green-500 hover:cursor-pointer" alt="share button image" />
+				{modalVisible && (generating || generatedUrl !== undefined) ? <div className="generate-popup absolute w-fit p-3 right-0 bg-slate-900 text-lg rounded-md">
+					{generating ? <p className="text-green-500 opacity-70">Generating...</p> : <p className="text-white opacity-70 bg-slate-800 rounded-md p-2">{`${window.location.origin}/r/${generatedUrl}`}</p>}
+				</div> : ""}
+			</div> : "" }
+		</div>
+		{songs!.map((song: Song) => {
+			return (<SongFrame key={song.id} song={song} />);
+		})}
 	</div>);
 }
