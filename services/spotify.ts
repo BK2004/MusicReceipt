@@ -74,30 +74,37 @@ export const getToken = async (code: string | null) => {
 	const codeVerifier = getVerifier();
 
 	try {
-	const body = await fetch(TOKEN_URL, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded',
-		},
-		body: new URLSearchParams({
-			client_id: CLIENT_ID,
-			grant_type: 'authorization_code',
-			code,
-			redirect_uri: window.location.origin + '/',
-			code_verifier: codeVerifier,
-		}),
-	});
-	const res = await body.json();
+		const body = await fetch(TOKEN_URL, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+			body: new URLSearchParams({
+				client_id: CLIENT_ID,
+				grant_type: 'authorization_code',
+				code,
+				redirect_uri: window.location.origin + '/',
+				code_verifier: codeVerifier,
+			}),
+		});
+		const res = await body.json();
 
-	if (res?.access_token) {
-		// Access token present, save it in cookies
-		Cookies.set('access_token', res.access_token, { expires: new Date(Date.now() + 60 * 60 * 1000) });
-	}
+		if (res?.access_token) {
+			// Access token present, save it in cookies
+			Cookies.set('access_token', res.access_token, { expires: new Date(Date.now() + 60 * 60 * 1000) });
+		}
 
-	return res?.access_token;
+		return res?.access_token;
 	} catch(e) {} finally {
 		return null;
 	}
+}
+
+export const logOut = () => {
+	// Removes display_name, access_token, and code_verifier cookies, effectively logging out the user
+	Cookies.remove("display_name");
+	Cookies.remove("access_token");
+	Cookies.remove("code_verifier");
 }
 
 export const getDisplayName = async () => {

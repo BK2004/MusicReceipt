@@ -1,7 +1,8 @@
 'use client'
 
-import { type Song } from "@/services/spotify";
-import { useState } from "react";
+import { getToken, logOut, type Song } from "@/services/spotify";
+import { useState, useEffect } from "react";
+import Router from "next/router";
 
 import SongFrame from "./SongFrame";
 import Image from "next/image";
@@ -9,6 +10,12 @@ import Share from "@/public/share.svg";
 
 export default function SongList({ songs, displayName, generating, generatedUrl, generateUrl }: { songs: Song[], displayName: string, generating?: boolean, generatedUrl?: string | undefined, generateUrl?: () => void }) {
 	const [modalVisible, setModalVisible] = useState<boolean>(false);
+	const [loggedIn, setLoggedIn] = useState<undefined|boolean>(undefined);
+	
+	// Check if user is logged in
+	useEffect(() => {
+		getToken(null).then((res) => setLoggedIn(res !== undefined)).catch((e) => setLoggedIn(false));
+	}, []);
 	
 	const onClick = () => {
 		if (!modalVisible)
@@ -16,7 +23,7 @@ export default function SongList({ songs, displayName, generating, generatedUrl,
 		setModalVisible(!modalVisible);
 	}
 	
-	return (<div className={"w-full max-w-4xl flex flex-col justify-start gap-4"}>
+	return (loggedIn === undefined ? <div></div> : <div className={"w-full max-w-4xl flex flex-col justify-start"}>
 		<div className="text-green-500 text-4xl font-bold top-bar w-full flex justify-between">
 			<h1 className="">{displayName}&apos;s Music Receipt</h1>
 			{ generateUrl ? <div className="relative">
@@ -26,9 +33,10 @@ export default function SongList({ songs, displayName, generating, generatedUrl,
 				</div> : ""}
 			</div> : "" }
 		</div>
+		{loggedIn ? <button onClick={() => { logOut(); window.location.reload() }} className={`text-green-500 opacity-70 text-2xl hover:underline mr-auto ${generateUrl ? "-mt-2" : ""}`}>Log Out</button> : ""}
 		{songs!.map((song: Song) => {
 			return (<SongFrame key={song.id} song={song} />);
 		})}
-		{generateUrl ? "" : <a href="/generate" className="text-green-500 hover:underline">Generate your own Music Receipt!</a>}
+		{generateUrl ? "" : <a href="/generate" className="text-green-500 hover:underline mt-4">Generate your own Music Receipt!</a>}
 	</div>);
 }
